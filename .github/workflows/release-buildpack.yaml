@@ -108,7 +108,7 @@ jobs:
     permissions:
       packages: write
     env:
-      REGISTRY_PREFIX: ${{ matrix.container_registry.registry && format('{}/', matrix.container_registry.registry ) || '' }}
+      REGISTRY_PREFIX: ${{ matrix.container_registry.registry && format('{0}/', matrix.container_registry.registry ) || '' }}
     steps:
       - name: Download image artifacts
         uses: actions/download-artifact@v4
