@@ -95,6 +95,7 @@ jobs:
   push:
     strategy:
       matrix:
+        fail-fast: false
         container_registry: 
           - registry: ghcr.io/${{ github.repository_owner }} 
             username: ${{ github.actor }}
@@ -106,6 +107,8 @@ jobs:
     needs: [create]
     permissions:
       packages: write
+    env:
+      REGISTRY_PREFIX: ${{ matrix.container_registry.registry && format('{}/', matrix.container_registry.registry ) || '' }}
     steps:
       - name: Download image artifacts
         uses: actions/download-artifact@v4
@@ -134,7 +137,7 @@ jobs:
               IFS=_ read -r image tag <<< $filename
               echo "got image: $image, tag: $tag from $f"
               
-              image_name="${{ matrix.container_registry.registry }}/$image:$tag"
+              image_name="${{ env.REGISTRY_PREFIX }}$image:$tag"
 
               docker tag $image:$tag-${{ github.run_number }} $image_name 
               echo "Pushing $image_name"
@@ -150,7 +153,7 @@ jobs:
       - name: Create and push docker manifest
         run: |
           docker manifest create \
-            ${{ matrix.container_registry.registry }}/${{ env.BUILDPACK_NAME }}:latest \
+            ${{ env.REGISTRY_PREFIX }}${{ env.BUILDPACK_NAME }}:latest \
             ${{ steps.images.outputs.docker_args }}
 
-            docker manifest push ${{ matrix.container_registry.registry }}/${{ env.BUILDPACK_NAME }}:latest
+            docker manifest push ${{ env.REGISTRY_PREFIX }}${{ env.BUILDPACK_NAME }}:latest
